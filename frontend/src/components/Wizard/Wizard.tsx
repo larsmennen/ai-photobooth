@@ -1,5 +1,8 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {WebcamCapture} from "@/components/WebcamCapture";
+import {removeBackground, removeImage} from "@/slices/images";
+import {GalleryNoSSR} from "@/components/Gallery";
+import {BackgroundGenerator} from "@/components/BackgroundGenerator";
 
 const Wizard = () => {
   const [step, setStep] = useState(1);
@@ -8,14 +11,17 @@ const Wizard = () => {
 
   const renderStep1 = () => (
     <>
-      <div>hi</div>
+      <GalleryNoSSR stateKey={'backgrounds'} removeImage={removeBackground} />
       <div className="divider divider-horizontal">OR</div>
-      <WebcamCapture />
+      <BackgroundGenerator />
     </>
   )
 
   const renderStep2 = () => (
-    <h2>Step 2</h2>
+    <>
+      <h2>Step 2</h2>
+      <WebcamCapture />
+    </>
   )
   const renderStep3 = () => (
     <h2>Step 3</h2>

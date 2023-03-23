@@ -1,6 +1,7 @@
 import Head from 'next/head'
 import {GalleryNoSSR} from "@/components/Gallery";
 import {Wizard} from "@/components/Wizard";
+import {removeImage} from "@/slices/images";
 
 export default function Photobooth() {
   return (
@@ -13,7 +14,7 @@ export default function Photobooth() {
       </Head>
       <main className="flex h-screen w-screen flex-row">
           <div className="flex-1 basis-1/3 overflow-y-auto bg-gray-100">
-            <GalleryNoSSR />
+            <GalleryNoSSR stateKey={'images'} removeImage={removeImage} />
           </div>
           <div className="flex-1 basis-2/3 bg-gray-300">
             <Wizard />

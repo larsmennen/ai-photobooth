@@ -1,11 +1,17 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { useDispatch } from 'react-redux';
 import { TypedUseSelectorHook, useSelector } from 'react-redux';
-import {Image, IMAGE_KEY_PREFIX, imagesSlice} from './slices/images';
+import {
+  Image,
+  IMAGE_KEY_PREFIX,
+  BACKGROUND_KEY_PREFIX,
+  imagesSlice,
+  backgroundsSlice
+} from './slices/images';
 
-const getImagesFromLocalStorage = (): Image[] => {
+const getImagesFromLocalStorage = (key_prefix: string): Image[] => {
   if (typeof window !== 'undefined') {
-    const localstorageKeys = Object.keys(localStorage).filter((key) => key.startsWith(IMAGE_KEY_PREFIX))
+    const localstorageKeys = Object.keys(localStorage).filter((key) => key.startsWith(key_prefix))
     const images = [];
     for (let key of localstorageKeys) {
       const data = JSON.parse(localStorage.getItem(key));
@@ -26,9 +32,11 @@ const getImagesFromLocalStorage = (): Image[] => {
 export const store = configureStore({
   reducer: {
     images: imagesSlice.reducer,
+    backgrounds: backgroundsSlice.reducer
   },
   preloadedState: {
-    images: { list: getImagesFromLocalStorage() },
+    images: { list: getImagesFromLocalStorage(IMAGE_KEY_PREFIX) },
+    backgrounds: { list: getImagesFromLocalStorage(BACKGROUND_KEY_PREFIX) },
   },
 });
 

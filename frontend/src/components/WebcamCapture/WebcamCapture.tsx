@@ -24,10 +24,8 @@ const WebcamCapture = () => {
 
   const loadModel = async () => {
     setModelIsLoading(true);
-    console.log('hello')
     const model = await bodyPix.load(BODYPIX_CONFIG);
     setBodyPixNet(model);
-    console.log('bodypixnet', bodyPixNet)
     setModelIsLoading(false)
   }
   useEffect( () => {
