@@ -1,11 +1,10 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {Action, nanoid} from "@reduxjs/toolkit";
 import {useAppDispatch, useAppSelector} from "@/store";
-import Image from "next/image";
 import dynamic from "next/dynamic";
 import FullscreenImageOverlay
   from "../FullscreenImageOverlay/FullscreenImageOverlay";
-import {DeleteModal} from "@/components/DeleteModal";
+import {Modal} from "@/components/Modal";
 
 export type GalleryProps = {
   stateKey: string,
@@ -33,8 +32,6 @@ const Gallery = (props: GalleryProps) => {
     setShowDeleteModal(false)
   }
 
-  console.log(showDeleteModal, idForDeletion);
-
   return (
     <div>
       {images.map((image, index) => (
@@ -58,7 +55,7 @@ const Gallery = (props: GalleryProps) => {
                         strokeWidth="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg></button>
             </div>
-            <DeleteModal
+            <Modal
               id={image.id}
               key={`${image.id}-${showDeleteModal.toString()}-${(image.id === idForDeletion).toString()}`}
               isOpen={(showDeleteModal && image.id === idForDeletion)}

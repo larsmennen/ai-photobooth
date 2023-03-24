@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-function DeleteModal({ id, isOpen, title, body, onCancel, onConfirm }) {
+function Modal({ id, isOpen, title, body, onCancel, onConfirm }) {
   const [show, setShow] = useState(isOpen)
 
   const handleClose = () => {
@@ -31,7 +31,7 @@ function DeleteModal({ id, isOpen, title, body, onCancel, onConfirm }) {
             Cancel
           </button>
           <button className="btn btn-danger" onClick={handleConfirm}>
-            Delete
+            Confirm
           </button>
         </div>
       </div>
@@ -39,4 +39,4 @@ function DeleteModal({ id, isOpen, title, body, onCancel, onConfirm }) {
   )
 }
 
-export default DeleteModal
+export default Modal

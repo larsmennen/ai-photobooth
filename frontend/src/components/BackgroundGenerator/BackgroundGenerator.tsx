@@ -1,13 +1,28 @@
 import { useState } from "react";
 import {Configuration, OpenAIApi} from "openai";
-import nextBase64 from "next-base64";
 import {useAppDispatch} from "@/store";
 import {addBackground} from "@/slices/images";
 import {nanoid} from "@reduxjs/toolkit";
+import nextBase64 from "next-base64";
 
 const IMAGE_SIZE = 1024;
+const FINAL_IMAGE_WIDTH = 1820; // For 16:9 ratio
+const SYSTEM_PROMPT_ENHANCE_IMAGE_PROMPT = `You are a helpful assistant that is particularly good at providing great prompts for text-to-image models. You only output 1 prompt each time, and NOTHING else.
+`
+const USER_PROMPT_ENHANCE_IMAGE_PROMPT = `
+I have a very large image model that can generate images from an input prompt. It was trained on all publicly available internet images and their descriptions.
+You are an assistant that generates amazing high-quality prompts for this model so that the model outputs a nice looking image to be used as a background for a photoshoot.
+Make sure to include all of the following and make sure the resulting prompt is at most 3 sentences in length.
+The image should show:
+`
 
 type FormState = { type: "guide-me" | "free-form"; where: string; what: string; style: string; prompt: string; };
+
+class CustomFormData extends FormData {
+  getHeaders() {
+    return {};
+  }
+}
 
 const BackgroundGenerator: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -21,11 +36,10 @@ const BackgroundGenerator: React.FC = () => {
   });
 
   const openaiConfiguration = new Configuration({
-    apiKey: process.env.NEXTJS_PUBLIC_OPENAI_API_KEY, // Do not run this outside localhost, will expose your key.
+    apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY, // Do not run this outside localhost, will expose your key.
+    formDataCtor: CustomFormData // Hacky fix for https://github.com/openai/openai-node/issues/75
   });
   const openai = new OpenAIApi(openaiConfiguration);
-
-
 
   function canMakePrompt(state: FormState): {valid: boolean, errorMsg: string} {
     if (state.where === "" && state.what === "" && state.style === "") {
@@ -84,30 +98,151 @@ const BackgroundGenerator: React.FC = () => {
     })
   }
 
+  /*
+   * Use GPT3.5 to enhance the prompt
+   */
+  const enhancePrompt = async (prompt: string): string => {
+    const res = await openai.createChatCompletion({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {role: 'system', content: SYSTEM_PROMPT_ENHANCE_IMAGE_PROMPT},
+        {role: 'user', content: `${USER_PROMPT_ENHANCE_IMAGE_PROMPT}${prompt}`},
+      ]
+    });
+    if (res.status !== 200) {
+      alert('Unsuccessful request to OpenAI, refresh page?');
+      console.error(res);
+    }
+    return res.data.choices[0].message.content;
+  }
+
+  const dataType64toFile = (b64Data, filename) => {
+    const mime = "image/png";
+    const bstr = nextBase64.decode(b64Data);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    const newFile = new File([u8arr], filename, {
+      type: mime,
+    });
+    return newFile;
+  };
+
+  /*
+   * Extend a square image into a wider image by splitting it (with overlap)
+   * and then sending both to DALLE for completion, then merging back into one
+   * image. This is to get around the fact that DALLE only outputs square images
+   */
+  const extendImage = async (width: number, targetWidth: number, image: string, prompt: string) => {
+    const extraPixelsEachSide = (targetWidth - width) / 2;
+    const encodedImage = nextBase64.encode(image);
+
+    // Create a targetWidth x width canvas and paste image in the middle.
+    const canvas = document.createElement('canvas');
+    canvas.width = targetWidth;
+    canvas.height = width;
+    const ctx = canvas.getContext('2d', {alpha: true});
+    ctx.fillStyle = "rgba(0, 0, 0, 0)";
+    ctx.fillRect(0, 0, targetWidth, width);
+    const imageObj = new Image();
+    imageObj.onload = async () => {
+
+      // This needs some refactor/cleanup..
+
+      // Draw in middle
+      ctx.drawImage(imageObj, extraPixelsEachSide, 0);
+
+      // Cut out two images
+      const leftCanvas = document.createElement('canvas');
+      leftCanvas.width = width;
+      leftCanvas.height = width;
+      const leftCtx = leftCanvas.getContext('2d', {alpha: true});
+      leftCtx.fillStyle = "rgba(0, 0, 0, 0)";
+      leftCtx.fillRect(0, 0, width, width);
+      leftCtx.drawImage(canvas, 0, 0, width, width, 0, 0, width, width);
+      const leftImage = leftCanvas.toDataURL('image/png').replace(/^data:image\/\w+;base64,/, "");
+      const rightCanvas = document.createElement('canvas');
+      rightCanvas.width = width;
+      rightCanvas.height = width;
+      const rightCtx = rightCanvas.getContext('2d', {alpha: true});
+      rightCtx.fillStyle = "rgba(0, 0, 0, 0)";
+      rightCtx.fillRect(0, 0, width, width);
+      rightCtx.drawImage(canvas, targetWidth - width, 0, width, width, 0, 0, width, width);
+      const rightImage = rightCanvas.toDataURL('image/png').replace(/^data:image\/\w+;base64,/, "");
+
+      // Fill in images
+      const leftFile = dataType64toFile(leftImage, "image");
+      const resLeft = openai.createImageEdit(
+        leftFile,
+        prompt,
+        undefined,
+        1,
+        `${width}x${width}`,
+        'b64_json'
+      );
+      const rightFile = dataType64toFile(rightImage, "image");
+      const resRight = openai.createImageEdit(
+        rightFile,
+        prompt,
+        undefined,
+        1,
+        `${width}x${width}`,
+        'b64_json'
+      );
+      // Send in parallel
+      await Promise.all([resLeft, resRight]).then((values) => {
+
+        const [resLeft, resRight] = values;
+
+        if (resLeft.status !== 200) {
+          alert('Unsuccessful request to OpenAI, refresh page?');
+          console.error(resLeft);
+        }
+        if (resRight.status !== 200) {
+          alert('Unsuccessful request to OpenAI, refresh page?');
+          console.error(resRight);
+        }
+
+        // Merge the two images together
+        const leftImageObj = new Image();
+        leftImageObj.onload = () => {
+          ctx.drawImage(leftImageObj, 0, 0);
+          const rightImageObj = new Image();
+          rightImageObj.onload = () => {
+            ctx.drawImage(rightImageObj, targetWidth - width, 0);
+            pushNewImage(canvas.toDataURL());
+          };
+          rightImageObj.src = "data:image/png;base64," + resRight.data.data[0]['b64_json'];
+        };
+        leftImageObj.src = "data:image/png;base64," + resLeft.data.data[0]['b64_json'];
+      })
+    };
+    imageObj.src = "data:image/png;base64," + encodedImage;
+  }
+
   const handleFormSubmit = async () => {
     setIsLoading(true);
 
-    const res = await openai.createImage({
-      prompt: formState.prompt,
+    // Enhance the prompt
+    const enhancedPrompt = await enhancePrompt(formState.prompt);
+
+    // Generate the image
+    const imageGenRes = await openai.createImage({
+      prompt: enhancedPrompt,
       n: 1,
       size: `${IMAGE_SIZE}x${IMAGE_SIZE}`,
       response_format: 'b64_json'
     });
-    if (res.status !== 200) {
+    if (imageGenRes.status !== 200) {
       alert('Unsuccessful request to OpenAI, refresh page?');
+      console.error(imageGenRes);
     }
-    const image = nextBase64.decode(res.data.data[0]['b64_json']);
-    const canvas = document.createElement('canvas');
-    canvas.width = IMAGE_SIZE;
-    canvas.height = IMAGE_SIZE;
+    const imageData = nextBase64.decode(imageGenRes.data.data[0]['b64_json']);
 
-    const ctx = canvas.getContext('2d');
-    const imageObj = new Image();
-    imageObj.onload = () => {
-      ctx.drawImage(imageObj, 0, 0);
-      pushNewImage(canvas.toDataURL());
-    };
-    imageObj.src = "data:image/png;base64," + res.data.data[0]['b64_json'];
+    // Extend the image
+    await extendImage(IMAGE_SIZE, FINAL_IMAGE_WIDTH, imageData, enhancedPrompt);
 
   }
 

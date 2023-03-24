@@ -3,9 +3,13 @@ import {GalleryNoSSR} from "@/components/Gallery";
 import {Wizard} from "@/components/Wizard";
 import {removeBackground} from "@/slices/images";
 import {BackgroundGenerator} from "@/components/BackgroundGenerator";
-import React from "react";
+import React, {useState} from "react";
+import {Modal} from "@/components/Modal";
 
 export default function Photobooth() {
+
+  const [showModal, setShowModal] = useState(false);
+
   return (
     <>
       <Head>
@@ -15,10 +19,23 @@ export default function Photobooth() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="flex h-screen w-screen flex-col">
-        <div className="flex flex-row justify-center">
+        <div className="flex flex-row justify-center items-center">
+          <div className="flex-1"></div>
           <article className="prose">
             <h1>AI Photobooth</h1>
           </article>
+          <div className="flex-1">
+            <button className="btn btn-ghost flex ml-auto" onClick={() => setShowModal(true)}>Support</button>
+            <Modal
+                id={'help'}
+                key={`help-${showModal.toString()}`}
+                isOpen={showModal}
+                title="Not working?"
+                body="Check you've set NEXT_PUBLIC_OPENAI_API_KEY in your .env.local file."
+                onCancel={() => setShowModal(false)}
+                onConfirm={() => setShowModal(false)}
+              />
+          </div>
         </div>
         <div className="flex flex-row h-screen">
           <div className="flex-1 basis-1/2 overflow-y-auto bg-gray-100">
