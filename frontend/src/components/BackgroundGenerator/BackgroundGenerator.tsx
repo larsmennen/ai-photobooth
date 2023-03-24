@@ -21,7 +21,7 @@ const BackgroundGenerator: React.FC = () => {
   });
 
   const openaiConfiguration = new Configuration({
-    apiKey: '',
+    apiKey: process.env.NEXTJS_PUBLIC_OPENAI_API_KEY, // Do not run this outside localhost, will expose your key.
   });
   const openai = new OpenAIApi(openaiConfiguration);
 
