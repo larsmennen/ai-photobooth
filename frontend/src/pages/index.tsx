@@ -1,7 +1,9 @@
 import Head from 'next/head'
 import {GalleryNoSSR} from "@/components/Gallery";
 import {Wizard} from "@/components/Wizard";
-import {removeImage} from "@/slices/images";
+import {removeBackground} from "@/slices/images";
+import {BackgroundGenerator} from "@/components/BackgroundGenerator";
+import React from "react";
 
 export default function Photobooth() {
   return (
@@ -12,13 +14,20 @@ export default function Photobooth() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className="flex h-screen w-screen flex-row">
-          <div className="flex-1 basis-1/3 overflow-y-auto bg-gray-100">
-            <GalleryNoSSR stateKey={'images'} removeImage={removeImage} />
+      <main className="flex h-screen w-screen flex-col">
+        <div className="flex flex-row justify-center">
+          <article className="prose">
+            <h1>AI Photobooth</h1>
+          </article>
+        </div>
+        <div className="flex flex-row h-screen">
+          <div className="flex-1 basis-1/2 overflow-y-auto bg-gray-100">
+            <GalleryNoSSR stateKey={'backgrounds'} removeImage={removeBackground} />
           </div>
-          <div className="flex-1 basis-2/3 bg-gray-300">
-            <Wizard />
+          <div className="flex-1 basis-1/2 bg-gray-300">
+            <BackgroundGenerator />
           </div>
+        </div>
       </main>
     </>
   )

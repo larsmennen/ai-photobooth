@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@reduxjs/toolkit": "^1.9.3",
+    "@tailwindcss/typography": "^0.5.9",
     "@tensorflow-models/body-pix": "^2.2.0",
     "@types/node": "18.15.5",
     "@types/react": "18.0.28",
