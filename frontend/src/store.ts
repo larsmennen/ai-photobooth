@@ -1,4 +1,4 @@
-import { configureStore } from '@reduxjs/toolkit';
+import {AnyAction, configureStore} from '@reduxjs/toolkit';
 import { useDispatch } from 'react-redux';
 import { TypedUseSelectorHook, useSelector } from 'react-redux';
 import {
@@ -8,40 +8,45 @@ import {
   imagesSlice,
   backgroundsSlice
 } from './slices/images';
+import {Database} from "@/slices/database";
+import {Dispatch} from "redux";
 
-const getImagesFromLocalStorage = (key_prefix: string): Image[] => {
-  if (typeof window !== 'undefined') {
-    const localstorageKeys = Object.keys(localStorage).filter((key) => key.startsWith(key_prefix))
-    const images = [];
-    for (let key of localstorageKeys) {
-      const data = JSON.parse(localStorage.getItem(key));
-      const id = key.split('_')[1];
-      images.push({
-        id: id,
-        data: data['image'],
-        prompt: data['prompt'],
-      })
-    }
+const getImagesFromIndexedDB = async (key_prefix: string): Promise<Image[]> => {
+  let db;
+  try {
+    db = new Database<Image>('imageStore', key_prefix);
+    const images = await db.getItems();
     return images;
-  } else {
-    console.warn('Cannot load from localstorage as not in browser.');
+  } catch (error) {
+    if (error instanceof DOMException && error.message.includes('specified object stores was not found')){
+      // Not initialized yet
+      await db.createObjectStore();
+      return [];
+    }
+    console.warn('Cannot load from IndexedDB:', error);
     return [];
   }
 };
 
-export const store = configureStore({
-  reducer: {
-    images: imagesSlice.reducer,
-    backgrounds: backgroundsSlice.reducer
-  },
-  preloadedState: {
-    images: { list: getImagesFromLocalStorage(IMAGE_KEY_PREFIX) },
-    backgrounds: { list: getImagesFromLocalStorage(BACKGROUND_KEY_PREFIX) },
-  },
-});
+export async function initializeStore() {
+  const preloadedState = {
+    images: { list: await getImagesFromIndexedDB(IMAGE_KEY_PREFIX) },
+    backgrounds: { list: await getImagesFromIndexedDB(BACKGROUND_KEY_PREFIX) },
+  };
 
-export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch;
+  const store = configureStore({
+    reducer: {
+      images: imagesSlice.reducer,
+      backgrounds: backgroundsSlice.reducer,
+    },
+    preloadedState,
+  });
+
+  return store;
+}
+
+export type RootState = {images: any, backgrounds: any};
+export type AppDispatch = Dispatch<AnyAction>;
 
 export const useAppDispatch = () => useDispatch<AppDispatch>();
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;

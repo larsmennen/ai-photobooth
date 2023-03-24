@@ -1,8 +1,16 @@
 import { useState } from "react";
+import {Configuration, OpenAIApi} from "openai";
+import nextBase64 from "next-base64";
+import {useAppDispatch} from "@/store";
+import {addBackground} from "@/slices/images";
+import {nanoid} from "@reduxjs/toolkit";
+
+const IMAGE_SIZE = 1024;
 
 type FormState = { type: "guide-me" | "free-form"; where: string; what: string; style: string; prompt: string; };
 
 const BackgroundGenerator: React.FC = () => {
+  const dispatch = useAppDispatch();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [formState, setFormState] = useState<FormState>({
     type: "guide-me",
@@ -11,6 +19,13 @@ const BackgroundGenerator: React.FC = () => {
     style: "",
     prompt: ""
   });
+
+  const openaiConfiguration = new Configuration({
+    apiKey: '',
+  });
+  const openai = new OpenAIApi(openaiConfiguration);
+
+
 
   function canMakePrompt(state: FormState): {valid: boolean, errorMsg: string} {
     if (state.where === "" && state.what === "" && state.style === "") {
@@ -52,8 +67,48 @@ const BackgroundGenerator: React.FC = () => {
     }
   };
 
-  const handleFormSubmit = () => {
+  const pushNewImage = (dataURL: string) => {
+    const id = nanoid();
+    dispatch(addBackground({
+      id,
+      data: dataURL,
+      prompt: formState.prompt
+    }));
+    setIsLoading(false);
+    setFormState({
+      type: formState.type,
+      where: "",
+      what: "",
+      style: "",
+      prompt: "",
+    })
+  }
+
+  const handleFormSubmit = async () => {
     setIsLoading(true);
+
+    const res = await openai.createImage({
+      prompt: formState.prompt,
+      n: 1,
+      size: `${IMAGE_SIZE}x${IMAGE_SIZE}`,
+      response_format: 'b64_json'
+    });
+    if (res.status !== 200) {
+      alert('Unsuccessful request to OpenAI, refresh page?');
+    }
+    const image = nextBase64.decode(res.data.data[0]['b64_json']);
+    const canvas = document.createElement('canvas');
+    canvas.width = IMAGE_SIZE;
+    canvas.height = IMAGE_SIZE;
+
+    const ctx = canvas.getContext('2d');
+    const imageObj = new Image();
+    imageObj.onload = () => {
+      ctx.drawImage(imageObj, 0, 0);
+      pushNewImage(canvas.toDataURL());
+    };
+    imageObj.src = "data:image/png;base64," + res.data.data[0]['b64_json'];
+
   }
 
   const {type, prompt} = formState;
@@ -130,9 +185,9 @@ const BackgroundGenerator: React.FC = () => {
           <div className="mt-4">
             <p>{prompt}</p>
           </div>
-          <button className={`btn btn-wide btn-accent ${isLoading ? "loading": ""}`} onClick={handleFormSubmit}>{isLoading ? "" : "Perform AI Magic 🪄"}</button>
         </div>
       )}
+      <button className={`btn btn-wide btn-accent ${isLoading ? "loading": ""}`} onClick={handleFormSubmit}>{isLoading ? "" : "Perform AI Magic 🪄"}</button>
     </div>
   )
 

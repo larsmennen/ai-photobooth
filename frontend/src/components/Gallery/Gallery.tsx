@@ -3,6 +3,8 @@ import {Action, nanoid} from "@reduxjs/toolkit";
 import {useAppDispatch, useAppSelector} from "@/store";
 import Image from "next/image";
 import dynamic from "next/dynamic";
+import FullscreenImageOverlay
+  from "../FullscreenImageOverlay/FullscreenImageOverlay";
 
 export type GalleryProps = {
   stateKey: string,
@@ -22,12 +24,12 @@ const Gallery = (props: GalleryProps) => {
       {images.map((image, index) => (
         <div key={image.id} className="card card-compact w-96 bg-base-100 shadow-xl">
           <figure>
-            <Image
+            <FullscreenImageOverlay
               key={`img-${image.id}`}
               src={image.data}
               alt={image.prompt}
-              width={120}
-              height={90}
+              width={1024}
+              height={1024}
             />
           </figure>
           <div className="card-body">
