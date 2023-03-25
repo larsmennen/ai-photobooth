@@ -3,8 +3,6 @@ import type { AppProps } from 'next/app'
 import {initializeStore, store} from "@/store";
 import {Provider} from "react-redux";
 import {useEffect, useState} from "react";
-import {Database} from "@/slices/database";
-import {Image} from "@/slices/images";
 
 export default function App({ Component, pageProps }: AppProps) {
   const [store, setStore] = useState(null);

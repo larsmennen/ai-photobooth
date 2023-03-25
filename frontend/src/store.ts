@@ -1,15 +1,19 @@
 import {AnyAction, configureStore} from '@reduxjs/toolkit';
-import { useDispatch } from 'react-redux';
-import { TypedUseSelectorHook, useSelector } from 'react-redux';
+import {TypedUseSelectorHook, useDispatch, useSelector} from 'react-redux';
 import {
+  BACKGROUND_KEY_PREFIX,
+  backgroundsSlice,
   Image,
   IMAGE_KEY_PREFIX,
-  BACKGROUND_KEY_PREFIX,
-  imagesSlice,
-  backgroundsSlice
+  imagesSlice
 } from './slices/images';
 import {Database} from "@/slices/database";
 import {Dispatch} from "redux";
+import {
+  AppConfig,
+  configurationSlice,
+  getConfigurationFromLocalStorage
+} from "@/slices/config";
 
 const getImagesFromIndexedDB = async (key_prefix: string): Promise<Image[]> => {
   let db;
@@ -32,12 +36,14 @@ export async function initializeStore() {
   const preloadedState = {
     images: { list: await getImagesFromIndexedDB(IMAGE_KEY_PREFIX) },
     backgrounds: { list: await getImagesFromIndexedDB(BACKGROUND_KEY_PREFIX) },
+    configuration: getConfigurationFromLocalStorage(),
   };
 
   const store = configureStore({
     reducer: {
       images: imagesSlice.reducer,
       backgrounds: backgroundsSlice.reducer,
+      configuration: configurationSlice.reducer,
     },
     preloadedState,
   });
@@ -45,7 +51,7 @@ export async function initializeStore() {
   return store;
 }
 
-export type RootState = {images: any, backgrounds: any};
+export type RootState = { configuration: AppConfig, images: any, backgrounds: any};
 export type AppDispatch = Dispatch<AnyAction>;
 
 export const useAppDispatch = () => useDispatch<AppDispatch>();

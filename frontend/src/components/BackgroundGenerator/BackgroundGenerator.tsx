@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {Configuration, OpenAIApi} from "openai";
-import {useAppDispatch} from "@/store";
+import {useAppDispatch, useAppSelector} from "@/store";
 import {addBackground} from "@/slices/images";
 import {nanoid} from "@reduxjs/toolkit";
 import nextBase64 from "next-base64";
@@ -35,8 +35,9 @@ const BackgroundGenerator: React.FC = () => {
     prompt: ""
   });
 
+  const openaiApiKey = useAppSelector(state => state.configuration.openaiApiKey);
   const openaiConfiguration = new Configuration({
-    apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY, // Do not run this outside localhost, will expose your key.
+    apiKey: openaiApiKey,
     formDataCtor: CustomFormData // Hacky fix for https://github.com/openai/openai-node/issues/75
   });
   const openai = new OpenAIApi(openaiConfiguration);

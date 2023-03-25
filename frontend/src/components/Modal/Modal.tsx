@@ -31,7 +31,7 @@ function Modal({ id, isOpen, title, body, onCancel, onConfirm }) {
             Cancel
           </button>
           <button className="btn btn-danger" onClick={handleConfirm}>
-            Confirm
+            OK
           </button>
         </div>
       </div>
