@@ -10,7 +10,7 @@ function ConfigurationModal() {
   const dispatch = useAppDispatch();
 
   const handleConfirm = () => {
-    dispatch(updateConfig('openaiApiKey', openaiApiKeyInputValue));
+    dispatch(updateConfig({key: 'openaiApiKey', value: openaiApiKeyInputValue}));
     setShow(false);
   }
 
