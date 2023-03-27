@@ -19,7 +19,7 @@ const FullscreenImageOverlay: React.FC<FullscreenImageOverlayProps> = ({ src, wi
     <>
       <div
         className={`fixed top-0 left-0 right-0 bottom-0 bg-black transition-opacity duration-300 ${
-          isFullscreen ? "opacity-100 pointer-events-auto z-10" : "opacity-0 pointer-events-none z-0"
+          isFullscreen ? "opacity-100 pointer-events-auto z-10 cursor-pointer" : "opacity-0 pointer-events-none z-0"
         }`}
         onClick={handleClick}
       >
@@ -27,7 +27,7 @@ const FullscreenImageOverlay: React.FC<FullscreenImageOverlayProps> = ({ src, wi
           <Image src={src} fill={true} style={{objectFit: "contain"}} alt={alt}/>
         </div>
       </div>
-      <div onClick={handleClick}>
+      <div onClick={handleClick} className="cursor-pointer transform transition-all duration-300 hover:scale-110">
         <Image src={src} width={width} height={height} alt={alt} />
       </div>
     </>

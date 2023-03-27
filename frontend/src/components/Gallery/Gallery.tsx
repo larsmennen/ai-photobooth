@@ -33,9 +33,11 @@ const Gallery = (props: GalleryProps) => {
   }
 
   if (images.length) {
+    // Put newest first
+    const imagesToShow = [...images].reverse();
     return (
       <div className="grid grid-cols-2 gap-4 p-6">
-        {images.map((image, index) => (
+        {imagesToShow.map((image) => (
           <div key={image.id}
                className="card card-compact w-96 bg-base-100 shadow-xl">
             <figure>

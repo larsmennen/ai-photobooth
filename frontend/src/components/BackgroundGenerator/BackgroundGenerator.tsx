@@ -86,7 +86,7 @@ const BackgroundGenerator: React.FC = () => {
   };
 
   const pushNewImage = (dataURL: string) => {
-    const id = nanoid();
+    const id = `${Date.now()}-${nanoid()}`;
     dispatch(addBackground({
       id,
       data: dataURL,
