@@ -2,6 +2,8 @@
 
 AI Photobooth: Create beautiful backgrounds for a photobooth quickly using AI.
 
+#### Demo at: [https://ai-photobooth.vercel.app/](https://ai-photobooth.vercel.app/)
+
 ## How it works
 
 Users can enter either a prompt directly, or specify a "what", "where", and "style" for the background. It then:
