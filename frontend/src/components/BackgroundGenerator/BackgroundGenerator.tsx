@@ -1,10 +1,15 @@
-import { useState } from "react";
+import React, { useState} from "react";
 import {Configuration, OpenAIApi} from "openai";
 import {useAppDispatch, useAppSelector} from "@/store";
 import {addBackground} from "@/slices/images";
 import {nanoid} from "@reduxjs/toolkit";
 import nextBase64 from "next-base64";
 import {EnhancedPromptModal} from "@/components/EnhancedPromptModal";
+import {PresetButtons} from "@/components/PresetButtons";
+import {
+  InputWithRef,
+  RefWithMethods
+} from "@/components/PresetButtons/PresetButtons";
 
 const IMAGE_SIZE = 1024;
 const FINAL_IMAGE_WIDTH = 1820; // For 16:9 ratio
@@ -24,6 +29,12 @@ You need to then take those and paint a picture with your description.
 Keywords:
 `
 
+const PRECONFIGURED_OPTIONS = {
+  'what': ["Kangaroo", "Tulip field", "Windmill", "Milky Way", "Rainbow", "German Shepherd in a superman suit" ],
+  'where': ['Australian outback','Amsterdam houses', "Sydney Opera House", "Flinders Street Station" ],
+  'style': ['Oil painting', "Impressionist", "Photorealistic 4k", "Van Gogh", "Vermeer" ]
+}
+
 type FormState = { type: "guide-me" | "free-form"; where: string; what: string; style: string; prompt: string; };
 
 class CustomFormData extends FormData {
@@ -37,6 +48,7 @@ const BackgroundGenerator: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showEnhancedPromptModal, setShowEnhancedPromptModal] = useState<boolean>(false);
   const [enhancedPrompt, setEnhancedPrompt] = useState<string>('');
+  const [revision, setRevision] = useState<number>(0);
   const [formState, setFormState] = useState<FormState>({
     type: "guide-me",
     where: "",
@@ -44,6 +56,9 @@ const BackgroundGenerator: React.FC = () => {
     style: "",
     prompt: ""
   });
+  const whereInput = React.createRef<HTMLInputElement>();
+  const whatInput = React.createRef<HTMLInputElement>();
+  const styleInput = React.createRef<HTMLInputElement>();
 
   const openaiApiKey = useAppSelector(state => state.configuration.openaiApiKey);
   const openaiConfiguration = new Configuration({
@@ -92,13 +107,8 @@ const BackgroundGenerator: React.FC = () => {
     }
   };
 
-  const pushNewImage = (dataURL: string) => {
-    const id = `${Date.now()}-${nanoid()}`;
-    dispatch(addBackground({
-      id,
-      data: dataURL,
-      prompt: formState.prompt
-    }));
+  const clearForm = () => {
+    setShowEnhancedPromptModal(false);
     setIsLoading(false);
     setFormState({
       type: formState.type,
@@ -107,7 +117,17 @@ const BackgroundGenerator: React.FC = () => {
       style: "",
       prompt: "",
     });
-    setShowEnhancedPromptModal(false);
+    setRevision(revision + 1);
+  }
+
+  const pushNewImage = (dataURL: string) => {
+    const id = `${Date.now()}-${nanoid()}`;
+    dispatch(addBackground({
+      id,
+      data: dataURL,
+      prompt: formState.prompt
+    }));
+    clearForm();
   }
 
   /*
@@ -277,15 +297,7 @@ const BackgroundGenerator: React.FC = () => {
       } else {
         alert('Unsuccessful request to OpenAI, refresh page?');
       }
-      setShowEnhancedPromptModal(false);
-      setIsLoading(false);
-      setFormState({
-        type: formState.type,
-        where: "",
-        what: "",
-        style: "",
-        prompt: "",
-      });
+      clearForm();
       return;
     }
     const imageDataEncoded = imageGenRes.data?.data[0]['b64_json'];
@@ -304,20 +316,21 @@ const BackgroundGenerator: React.FC = () => {
   const {type, prompt} = formState;
 
   return (
-    <div>
+    <div className="p-10 w-full">
       <EnhancedPromptModal prompt={enhancedPrompt} showModal={showEnhancedPromptModal} />
-      <h1 className="text-2xl font-bold">Generate an AI background</h1>
-      <div className="form-control">
-        <label className="label cursor-pointer">
-          <span className="label-text">Guide me</span>
-          <input type="checkbox" className="toggle" checked={type === 'free-form'} onChange={handleTypeToggle} disabled={isLoading} />
-          <span className="label-text">Free-form</span>
-        </label>
+      <div className="flex justify-center">
+        <h1 className="flex-1 text-2xl font-bold">{type === 'free-form' ? 'Write your own prompt' : 'Choose from the following'}</h1>
+        <div className="form-control flex mt-auto">
+          <label htmlFor="mode" className="form-label label">
+            <span className="label-text pr-5">Advanced free-form mode</span>
+            <input type="checkbox" name="mode" className="toggle" checked={type === 'free-form'} onChange={handleTypeToggle} disabled={isLoading} />
+          </label>
+        </div>
       </div>
       {type === "free-form" ? (
         <div className="mt-4">
           <textarea
-            className="form-input textarea textarea-bordered h-48 w-full resize-none max-w-xs"
+            className="form-input textarea textarea-bordered h-48 w-full resize-none max-w-md"
             placeholder="E.g. &quot;A photorealistic picture of the Melbourne skyline at sunset with Hulk walking around&quot;"
             disabled={isLoading}
             defaultValue={formState.prompt}
@@ -328,48 +341,54 @@ const BackgroundGenerator: React.FC = () => {
         </div>
       ) : (
         <div>
-          <div className="mt-4 form-control w-full max-w-xs">
+          <div className="mt-4 form-control w-full">
             <label htmlFor="Where" className="form-label label">
-              <span className="label-text">Where</span>
+              <span className="label-text text-xl font-bold">Where</span>
             </label>
-            <input
+            <PresetButtons key={`where-buttons-${revision}`} presets={PRECONFIGURED_OPTIONS['where']} inputRef={whereInput as RefWithMethods} />
+            <InputWithRef
               type="text"
-              className="form-input input input-bordered w-full max-w-xs"
+              className="form-input input input-bordered w-full max-w-md"
               placeholder="E.g. &quot;Paris&quot;, &quot;A beautiful rose garden&quot;, &quot;Melbourne with Northern lights&quot;, ..."
               value={formState.where}
               disabled={isLoading}
-              onChange={(event) =>
-                handleFormChange("where", event.target.value)
+              ref={whereInput}
+              onChange={(val) =>
+                handleFormChange("where", val)
               }
             />
           </div>
-          <div className="mt-4 form-control w-full max-w-xs">
+          <div className="mt-4 form-control w-full">
             <label htmlFor="What" className="form-label label">
-              <span className="label-text">What</span>
+              <span className="label-text text-xl font-bold">What</span>
             </label>
-            <input
+            <PresetButtons key={`what-buttons-${revision}`} presets={PRECONFIGURED_OPTIONS['what']} inputRef={whatInput as RefWithMethods} />
+            <InputWithRef
               type="text"
-              className="form-input input input-bordered w-full max-w-xs"
+              className="form-input input input-bordered w-full max-w-md"
               placeholder="E.g. &quot;A giant turtle&quot;, &quot;A dog in a spacesuit&quot;, &quot;Huge piles of books&quot;, ..."
               value={formState.what}
               disabled={isLoading}
-              onChange={(event) =>
-                handleFormChange("what", event.target.value)
+              ref={whatInput}
+              onChange={(val) =>
+                handleFormChange("what", val)
               }
             />
           </div>
-          <div className="mt-4 form-control w-full max-w-xs">
+          <div className="mt-4 form-control w-full">
             <label htmlFor="Style" className="form-label label">
-              <span className="label-text">Style</span>
+              <span className="label-text text-xl font-bold">Style</span>
             </label>
-            <input
+            <PresetButtons key={`style-buttons-${revision}`} presets={PRECONFIGURED_OPTIONS['style']} inputRef={styleInput as RefWithMethods} />
+            <InputWithRef
               type="text"
-              className="form-input input input-bordered w-full max-w-xs"
+              className="form-input input input-bordered w-full max-w-md"
               placeholder="E.g. &quot;Photorealistic picture&quot;, &quot;Monet painting&quot;, &quot;90s retro poster&quot;, ..."
               value={formState.style}
               disabled={isLoading}
-              onChange={(event) =>
-                handleFormChange("style", event.target.value)
+              ref={styleInput}
+              onChange={(val) =>
+                handleFormChange("style", val)
               }
             />
           </div>
@@ -378,7 +397,7 @@ const BackgroundGenerator: React.FC = () => {
           </div>
         </div>
       )}
-      <button className={`btn btn-wide btn-accent ${isLoading ? "loading": ""}`} onClick={handleFormSubmit}>{isLoading ? "" : "Perform AI Magic 🪄"}</button>
+      <button className={`btn mt-4 btn-wide btn-accent ${isLoading ? "loading": ""}`} onClick={handleFormSubmit}>{isLoading ? "" : "Perform AI Magic 🪄"}</button>
     </div>
   )
 

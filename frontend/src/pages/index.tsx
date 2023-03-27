@@ -36,7 +36,7 @@ export default function Photobooth() {
           <div className="flex-1 basis-1/2 overflow-y-auto bg-gray-100">
             <GalleryNoSSR stateKey={'backgrounds'} removeImage={removeBackground} />
           </div>
-          <div className="flex-1 basis-1/2 bg-gray-300">
+          <div className="flex-1 basis-1/2 bg-gray-100">
             <BackgroundGenerator />
           </div>
         </div>
