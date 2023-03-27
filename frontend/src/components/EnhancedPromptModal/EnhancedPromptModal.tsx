@@ -25,7 +25,7 @@ function EnhancedPromptModal(props: EnhancedPromptModalProps) {
       <div className="modal-box text-center">
         <article className="prose">
           <h3 className="font-bold text-lg">Working on it...</h3>
-          <p>The AI artists are generating some images for you right now. They'll be done in ~30 seconds. We've given them the following instructions:</p>
+          <p>The AI artists are generating some images for you right now. They&apos;ll be done in ~30 seconds. We&apos;ve given them the following instructions:</p>
           <blockquote className={"prose-xl"}>{prompt}</blockquote>
         </article>
         <progress className="progress w-56 mt-10"></progress>
