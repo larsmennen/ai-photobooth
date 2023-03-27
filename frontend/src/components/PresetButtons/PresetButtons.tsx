@@ -21,14 +21,14 @@ export const InputWithRef = forwardRef(function InputWithRef(props: any, ref) {
   useImperativeHandle(ref, () => {
     return {
       getValue: (): string => {
-        return inputRef.current.value;
+        return (inputRef.current as any).value;
       },
       setValue: (newValue: string): void => {
-        inputRef.current.value = newValue;
+        (inputRef.current as any).value = newValue;
         props.onChange(newValue);
       }
     };
-  }, []);
+  }, [props]);
 
   return <input {...props} ref={inputRef} />;
 });

@@ -345,7 +345,7 @@ const BackgroundGenerator: React.FC = () => {
             <label htmlFor="Where" className="form-label label">
               <span className="label-text text-xl font-bold">Where</span>
             </label>
-            <PresetButtons key={`where-buttons-${revision}`} presets={PRECONFIGURED_OPTIONS['where']} inputRef={whereInput as RefWithMethods} />
+            <PresetButtons key={`where-buttons-${revision}`} presets={PRECONFIGURED_OPTIONS['where']} inputRef={whereInput as unknown as RefWithMethods} />
             <InputWithRef
               type="text"
               className="form-input input input-bordered w-full max-w-md"
@@ -353,7 +353,7 @@ const BackgroundGenerator: React.FC = () => {
               value={formState.where}
               disabled={isLoading}
               ref={whereInput}
-              onChange={(val) =>
+              onChange={(val: string) =>
                 handleFormChange("where", val)
               }
             />
@@ -362,7 +362,7 @@ const BackgroundGenerator: React.FC = () => {
             <label htmlFor="What" className="form-label label">
               <span className="label-text text-xl font-bold">What</span>
             </label>
-            <PresetButtons key={`what-buttons-${revision}`} presets={PRECONFIGURED_OPTIONS['what']} inputRef={whatInput as RefWithMethods} />
+            <PresetButtons key={`what-buttons-${revision}`} presets={PRECONFIGURED_OPTIONS['what']} inputRef={whatInput as unknown as RefWithMethods} />
             <InputWithRef
               type="text"
               className="form-input input input-bordered w-full max-w-md"
@@ -370,7 +370,7 @@ const BackgroundGenerator: React.FC = () => {
               value={formState.what}
               disabled={isLoading}
               ref={whatInput}
-              onChange={(val) =>
+              onChange={(val: string) =>
                 handleFormChange("what", val)
               }
             />
@@ -379,7 +379,7 @@ const BackgroundGenerator: React.FC = () => {
             <label htmlFor="Style" className="form-label label">
               <span className="label-text text-xl font-bold">Style</span>
             </label>
-            <PresetButtons key={`style-buttons-${revision}`} presets={PRECONFIGURED_OPTIONS['style']} inputRef={styleInput as RefWithMethods} />
+            <PresetButtons key={`style-buttons-${revision}`} presets={PRECONFIGURED_OPTIONS['style']} inputRef={styleInput as unknown as RefWithMethods} />
             <InputWithRef
               type="text"
               className="form-input input input-bordered w-full max-w-md"
@@ -387,7 +387,7 @@ const BackgroundGenerator: React.FC = () => {
               value={formState.style}
               disabled={isLoading}
               ref={styleInput}
-              onChange={(val) =>
+              onChange={(val: string) =>
                 handleFormChange("style", val)
               }
             />
