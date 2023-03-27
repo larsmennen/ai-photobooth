@@ -1,6 +1,6 @@
-import React, {useEffect, useRef, useState} from 'react';
-import {Action, nanoid} from "@reduxjs/toolkit";
-import {useAppDispatch, useAppSelector} from "@/store";
+import React, { useState} from 'react';
+import { PayloadAction} from "@reduxjs/toolkit";
+import {RootState, useAppDispatch, useAppSelector} from "@/store";
 import dynamic from "next/dynamic";
 import FullscreenImageOverlay
   from "../FullscreenImageOverlay/FullscreenImageOverlay";
@@ -8,11 +8,11 @@ import {Modal} from "@/components/Modal";
 
 export type GalleryProps = {
   stateKey: string,
-  removeImage: (state: any, action: Action) => Action
+  removeImage: (id: any) => PayloadAction<any>
 }
 
 const Gallery = (props: GalleryProps) => {
-  const images = useAppSelector(state => state[props.stateKey].list);
+  const images = useAppSelector((state: RootState) => (state as any)[props.stateKey].list);
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [idForDeletion, setIdForDeletion] = useState<string | undefined>(undefined)
   const dispatch = useAppDispatch();

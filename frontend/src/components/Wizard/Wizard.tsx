@@ -1,6 +1,6 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useState} from 'react';
 import {WebcamCapture} from "@/components/WebcamCapture";
-import {removeBackground, removeImage} from "@/slices/images";
+import {removeBackground} from "@/slices/images";
 import {GalleryNoSSR} from "@/components/Gallery";
 import {BackgroundGenerator} from "@/components/BackgroundGenerator";
 

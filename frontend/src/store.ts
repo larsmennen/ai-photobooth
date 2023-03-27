@@ -19,6 +19,11 @@ const getImagesFromIndexedDB = async (key_prefix: string): Promise<Image[]> => {
   let db;
   try {
     db = new Database<Image>('imageStore', key_prefix);
+  } catch (e) {
+    console.error('Could not open IndexedDB', e);
+    return [];
+  }
+  try {
     const images = await db.getItems();
     return images;
   } catch (error) {

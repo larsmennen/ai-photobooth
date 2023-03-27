@@ -70,7 +70,7 @@ const BackgroundGenerator: React.FC = () => {
   }
 
   const handleTypeToggle = () => {
-    setFormState((prevState) => ({...prevState, type: type === 'free-form' ? 'guid-me' : 'free-form'}));
+    setFormState((prevState: FormState) => ({...prevState, type: type === 'free-form' ? 'guide-me' : 'free-form'}));
   };
 
   const handleFormChange = (field: keyof FormState, value: string) => {
@@ -106,7 +106,7 @@ const BackgroundGenerator: React.FC = () => {
   /*
    * Use GPT3.5 to enhance the prompt
    */
-  const enhancePrompt = async (prompt: string): string => {
+  const enhancePrompt = async (prompt: string): Promise<string> => {
     const res = await openai.createChatCompletion({
       model: 'gpt-3.5-turbo',
       messages: [
@@ -117,14 +117,20 @@ const BackgroundGenerator: React.FC = () => {
     if (res.status !== 200) {
       alert('Unsuccessful request to OpenAI, refresh page?');
       console.error(res);
+      return '';
     }
-    const enhancedPrompt = res.data.choices[0].message.content;
+    if (!res.data.choices[0].message) {
+      alert('Unsuccessful response, check return');
+      console.error(res);
+      return '';
+    }
+    const enhancedPrompt = res.data.choices[0].message?.content;
     setEnhancedPrompt(enhancedPrompt);
     setShowEnhancedPromptModal(true);
     return enhancedPrompt;
   }
 
-  const dataType64toFile = (b64Data, filename) => {
+  const dataType64toFile = (b64Data: string, filename: string): File => {
     const mime = "image/png";
     const bstr = nextBase64.decode(b64Data);
     let n = bstr.length;
@@ -152,6 +158,7 @@ const BackgroundGenerator: React.FC = () => {
     canvas.width = targetWidth;
     canvas.height = width;
     const ctx = canvas.getContext('2d', {alpha: true});
+    if (!ctx) return;
     ctx.fillStyle = "rgba(0, 0, 0, 0)";
     ctx.fillRect(0, 0, targetWidth, width);
     const imageObj = new Image();
@@ -167,6 +174,7 @@ const BackgroundGenerator: React.FC = () => {
       leftCanvas.width = width;
       leftCanvas.height = width;
       const leftCtx = leftCanvas.getContext('2d', {alpha: true});
+      if (!leftCtx) return;
       leftCtx.fillStyle = "rgba(0, 0, 0, 0)";
       leftCtx.fillRect(0, 0, width, width);
       leftCtx.drawImage(canvas, 0, 0, width, width, 0, 0, width, width);
@@ -175,6 +183,7 @@ const BackgroundGenerator: React.FC = () => {
       rightCanvas.width = width;
       rightCanvas.height = width;
       const rightCtx = rightCanvas.getContext('2d', {alpha: true});
+      if (!rightCtx) return;
       rightCtx.fillStyle = "rgba(0, 0, 0, 0)";
       rightCtx.fillRect(0, 0, width, width);
       rightCtx.drawImage(canvas, targetWidth - width, 0, width, width, 0, 0, width, width);
@@ -246,8 +255,15 @@ const BackgroundGenerator: React.FC = () => {
     if (imageGenRes.status !== 200) {
       alert('Unsuccessful request to OpenAI, refresh page?');
       console.error(imageGenRes);
+      return;
     }
-    const imageData = nextBase64.decode(imageGenRes.data.data[0]['b64_json']);
+    const imageDataEncoded = imageGenRes.data?.data[0]['b64_json'];
+    if (!imageDataEncoded) {
+      alert('Unsuccessful request to OpenAI, check response');
+      console.error(imageGenRes);
+      return;
+    }
+    const imageData = nextBase64.decode(imageDataEncoded);
 
     // Extend the image
     await extendImage(IMAGE_SIZE, FINAL_IMAGE_WIDTH, imageData, enhancedPrompt);

@@ -1,4 +1,4 @@
-import {useRef, useState} from 'react'
+import {useState} from 'react'
 import {useAppDispatch, useAppSelector} from "@/store";
 import {updateConfig} from "@/slices/config";
 

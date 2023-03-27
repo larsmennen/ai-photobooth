@@ -1,6 +1,16 @@
 import { useState } from 'react'
 
-function Modal({ id, isOpen, title, body, onCancel, onConfirm }) {
+type ModalProps = {
+  id: string;
+  isOpen: boolean;
+  title: string;
+  body: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+}
+
+function Modal(props: ModalProps) {
+  const { id, isOpen, title, body, onCancel, onConfirm } = props;
   const [show, setShow] = useState(isOpen)
 
   const handleClose = () => {

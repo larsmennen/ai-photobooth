@@ -17,16 +17,13 @@ export class Database<T> {
         const version =  database.version;
         database.close();
         const secondRequest = indexedDB.open(dbName, version+1);
-        secondRequest.onupgradeneeded = function (e) {
-          const database = e.target.result;
+        secondRequest.onupgradeneeded = function () {
+          const database = secondRequest.result;
           const objectStore = database.createObjectStore(storeName, {
             keyPath: 'id'
           });
         };
-        secondRequest.onsuccess = function (e) {
-          e.target.result.close();
-          resolve();
-        }
+        secondRequest.onsuccess = () => resolve(request.result);
       }
     })
   }

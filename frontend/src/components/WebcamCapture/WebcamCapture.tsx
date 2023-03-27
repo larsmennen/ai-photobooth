@@ -55,11 +55,16 @@ const WebcamCapture = () => {
         canvas.height = image.height;
 
         const context = canvas.getContext('2d');
+        if (!context) return;
         context.drawImage(image, 0, 0);
 
         const imageData = context.getImageData(0, 0, image.width, image.height);
 
         // Segment image
+        if (!bodyPixNet) {
+          alert('bodyPixNet not loaded');
+          return;
+        }
         const mask = await bodyPixNet.segmentPerson(imageData);
 
         // Combine images according to the mask

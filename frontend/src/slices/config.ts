@@ -1,11 +1,12 @@
 import {createSlice, PayloadAction, Slice} from '@reduxjs/toolkit';
-import {Database} from "@/slices/database";
 
 const CONFIGURATION_KEY_PREFIX = 'config';
 
 export type AppConfig = {
   openaiApiKey: string
 }
+
+type AppConfigKey = keyof AppConfig;
 
 export type UpdateConfigAction = {
   key: string;
@@ -32,8 +33,13 @@ export const getConfigurationFromLocalStorage = () => {
   if (typeof window !== 'undefined') {
     const localstorageKeys = Object.keys(localStorage).filter((key) => key.startsWith(CONFIGURATION_KEY_PREFIX))
     for (let key of localstorageKeys) {
-      const data = JSON.parse(localStorage.getItem(key));
-      const keyInConfig = key.split('_')[1];
+      const jsonData = localStorage.getItem(key);
+      if (!jsonData) {
+        console.error(`Error when retrieving item with key ${key} from localstorage`);
+        return [];
+      }
+      const data = JSON.parse(jsonData);
+      const keyInConfig = key.split('_')[1] as AppConfigKey;
       config[keyInConfig] = data;
     }
     return config;
