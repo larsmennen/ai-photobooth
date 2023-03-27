@@ -246,15 +246,39 @@ const BackgroundGenerator: React.FC = () => {
     const enhancedPrompt = await enhancePrompt(formState.prompt);
 
     // Generate the image
-    const imageGenRes = await openai.createImage({
-      prompt: enhancedPrompt,
-      n: 1,
-      size: `${IMAGE_SIZE}x${IMAGE_SIZE}`,
-      response_format: 'b64_json'
-    });
-    if (imageGenRes.status !== 200) {
-      alert('Unsuccessful request to OpenAI, refresh page?');
-      console.error(imageGenRes);
+    let imageGenRes;
+    try {
+      imageGenRes = await openai.createImage({
+        prompt: enhancedPrompt,
+        n: 1,
+        size: `${IMAGE_SIZE}x${IMAGE_SIZE}`,
+        response_format: 'b64_json'
+      });
+    } catch (error: any) {
+      console.error('Error when calling OpenAI image generation');
+      let message: string;
+      if (error.response) {
+        console.error(error.response.status);
+        console.error(error.response.data);
+        message = error.response.data.error.message;
+      } else {
+        console.error(error.message);
+        message = error.message;
+      }
+      if (message.includes('safety system')) {
+        alert('OpenAI\s safety system rejected your prompt. Try again with something less saucy :)');
+      } else {
+        alert('Unsuccessful request to OpenAI, refresh page?');
+      }
+      setShowEnhancedPromptModal(false);
+      setIsLoading(false);
+      setFormState({
+        type: formState.type,
+        where: "",
+        what: "",
+        style: "",
+        prompt: "",
+      });
       return;
     }
     const imageDataEncoded = imageGenRes.data?.data[0]['b64_json'];
