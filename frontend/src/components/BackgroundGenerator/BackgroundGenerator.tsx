@@ -8,13 +8,20 @@ import {EnhancedPromptModal} from "@/components/EnhancedPromptModal";
 
 const IMAGE_SIZE = 1024;
 const FINAL_IMAGE_WIDTH = 1820; // For 16:9 ratio
-const SYSTEM_PROMPT_ENHANCE_IMAGE_PROMPT = `You are a helpful assistant that is particularly good at providing great prompts for text-to-image models. You only output 1 prompt each time, and NOTHING else.
+const SYSTEM_PROMPT_ENHANCE_IMAGE_PROMPT = `You are a helpful assistant that is particularly good at describing images vividly and concisely.
+You only output 1 description each time, and NOTHING else. For example, you do NOT say "here is a description".
+You always make sure to include the mentioned style in your response in the first line.
 `
 const USER_PROMPT_ENHANCE_IMAGE_PROMPT = `
-I have a very large image model that can generate images from an input prompt. It was trained on all publicly available internet images and their descriptions.
-You are an assistant that generates amazing high-quality prompts for this model so that the model outputs a nice looking image to be used as a background for a photoshoot.
-Make sure to include all of the following and make sure the resulting prompt is at most 3 sentences in length.
-The image should show:
+Imagine you're trying to explain an image to someone who can't see it.
+You must stay under 400 characters, and because of how little space you have, you don't need to write in full sentences.
+Use descriptive wording like "the bridge is colored a bold red with broad brush strokes", rather than subjective descriptions.
+Make sure to include the style in the first line of your description.
+
+I will give you just some key words about the images subject, and about the style of the image.
+You need to then take those and paint a picture with your description.
+
+Keywords:
 `
 
 type FormState = { type: "guide-me" | "free-form"; where: string; what: string; style: string; prompt: string; };
@@ -59,14 +66,14 @@ const BackgroundGenerator: React.FC = () => {
     if (!canMakePrompt(state).valid) {
       return ""
     }
-    const style = state.style === "" ? "A photorealistic picture" : state.style;
+    const style = state.style === "" ? "A 4k picture" : state.style;
     if (state.where === "") {
-      return `${style} of ${state.what}`;
+      return `${state.what}, style: ${style}`;
     }
     if (state.what === "") {
-      return `${style} of ${state.where}`;
+      return `${state.where}, style: ${style}`;
     }
-    return `${style} of ${state.what} in ${state.where}`;
+    return `${state.what}, ${state.where}, style: ${style}`;
   }
 
   const handleTypeToggle = () => {
