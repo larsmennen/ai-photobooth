@@ -4,6 +4,7 @@ import {useAppDispatch, useAppSelector} from "@/store";
 import {addBackground} from "@/slices/images";
 import {nanoid} from "@reduxjs/toolkit";
 import nextBase64 from "next-base64";
+import {EnhancedPromptModal} from "@/components/EnhancedPromptModal";
 
 const IMAGE_SIZE = 1024;
 const FINAL_IMAGE_WIDTH = 1820; // For 16:9 ratio
@@ -27,6 +28,8 @@ class CustomFormData extends FormData {
 const BackgroundGenerator: React.FC = () => {
   const dispatch = useAppDispatch();
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showEnhancedPromptModal, setShowEnhancedPromptModal] = useState<boolean>(false);
+  const [enhancedPrompt, setEnhancedPrompt] = useState<string>('');
   const [formState, setFormState] = useState<FormState>({
     type: "guide-me",
     where: "",
@@ -96,7 +99,8 @@ const BackgroundGenerator: React.FC = () => {
       what: "",
       style: "",
       prompt: "",
-    })
+    });
+    setShowEnhancedPromptModal(false);
   }
 
   /*
@@ -114,7 +118,10 @@ const BackgroundGenerator: React.FC = () => {
       alert('Unsuccessful request to OpenAI, refresh page?');
       console.error(res);
     }
-    return res.data.choices[0].message.content;
+    const enhancedPrompt = res.data.choices[0].message.content;
+    setEnhancedPrompt(enhancedPrompt);
+    setShowEnhancedPromptModal(true);
+    return enhancedPrompt;
   }
 
   const dataType64toFile = (b64Data, filename) => {
@@ -251,6 +258,7 @@ const BackgroundGenerator: React.FC = () => {
 
   return (
     <div>
+      <EnhancedPromptModal prompt={enhancedPrompt} showModal={showEnhancedPromptModal} />
       <h1 className="text-2xl font-bold">Generate an AI background</h1>
       <div className="form-control">
         <label className="label cursor-pointer">
@@ -295,7 +303,7 @@ const BackgroundGenerator: React.FC = () => {
             <input
               type="text"
               className="form-input input input-bordered w-full max-w-xs"
-              placeholder="E.g. &quot;A giant turtle&quot;, &quot;Dan Andrews in a spacesuit&quot;, &quot;Huge piles of quantum physics books&quot;, ..."
+              placeholder="E.g. &quot;A giant turtle&quot;, &quot;A dog in a spacesuit&quot;, &quot;Huge piles of books&quot;, ..."
               value={formState.what}
               disabled={isLoading}
               onChange={(event) =>

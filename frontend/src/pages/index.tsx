@@ -1,11 +1,10 @@
 import Head from 'next/head'
 import {GalleryNoSSR} from "@/components/Gallery";
-import {Wizard} from "@/components/Wizard";
 import {removeBackground} from "@/slices/images";
 import {BackgroundGenerator} from "@/components/BackgroundGenerator";
 import React, {useState} from "react";
-import {Modal} from "@/components/Modal";
 import {ConfigurationModal} from "@/components/ConfigurationModal";
+import {AiFillGithub} from "react-icons/ai";
 
 export default function Photobooth() {
 
@@ -21,22 +20,16 @@ export default function Photobooth() {
       </Head>
       <main className="flex h-screen w-screen flex-col">
         <ConfigurationModal />
-        <div className="flex flex-row justify-center items-center">
-          <div className="flex-1"></div>
-          <article className="prose">
-            <h1>AI Photobooth</h1>
-          </article>
-          <div className="flex-1">
-            <button className="btn btn-ghost flex ml-auto" onClick={() => setShowModal(true)}>Support</button>
-            <Modal
-                id={'help'}
-                key={`help-${showModal.toString()}`}
-                isOpen={showModal}
-                title="Not working?"
-                body="Check you've set NEXT_PUBLIC_OPENAI_API_KEY in your .env.local file."
-                onCancel={() => setShowModal(false)}
-                onConfirm={() => setShowModal(false)}
-              />
+        <div className="relative">
+          <div className="flex flex-row justify-center items-center">
+            <article className="prose">
+              <h1>AI Photobooth</h1>
+            </article>
+            <div className="absolute top-0.5 right-0">
+              <a className="flex" href="https://github.com/larsmennen/ai-photobooth">
+                <AiFillGithub className="text-4xl" />
+              </a>
+            </div>
           </div>
         </div>
         <div className="flex flex-row h-screen">
