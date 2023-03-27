@@ -15,16 +15,14 @@ The idea is to use this on a projector, so that one can take pictures in front o
 
 ## How to use
 
-This requires an OpenAI API key. Currently there is no backend and the API key is read from your environment, so this is *not safe to run outside localhost*.
+This requires an OpenAI API key. You will be prompted for the key when you launch the app.
+Afterwards it'll be stored in your localstorage. 
+Alternatively you can set the `NEXT_PUBLIC_OPENAI_API_KEY` environment variable, but this will be written into the JS, so this is *not safe to run outside localhost*.
 
 To run:
 
-1. Create an `.env.local` file in `frontend/` with content:
-   ```
-   NEXT_PUBLIC_OPENAI_API_KEY="YOURKEYHERE"
-   ```
-2. Run `npm run dev` in `frontend/`
-3. Go to `localhost:3000`.
+1. Run `npm run dev` in `frontend/`
+2. Go to `localhost:3000`.
 
 ## Unused components
 
