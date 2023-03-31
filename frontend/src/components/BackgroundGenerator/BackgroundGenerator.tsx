@@ -31,8 +31,8 @@ Keywords:
 
 const PRECONFIGURED_OPTIONS = {
   'what': ["Kangaroo", "Tulip field", "Dutch windmill", "Milky Way", "Rainbow", "German Shepherd in a superman suit" ],
-  'where': ['Australian outback','Amsterdam houses', "Sydney Opera House", "Flinders Street Station" ],
-  'style': ['Oil painting', "Impressionist", "Photorealistic 4k", "Van Gogh", "Vermeer" ]
+  'where': ['Australian outback','Amsterdam houses', "Sydney Opera House", "Flinders Street Station", "Hindu temple" ],
+  'style': ['Oil painting', "Impressionist", "Photorealistic 4k", "Van Gogh", "Vermeer", "Watercolor" ]
 }
 
 type FormState = { type: "guide-me" | "free-form"; where: string; what: string; style: string; prompt: string; };
