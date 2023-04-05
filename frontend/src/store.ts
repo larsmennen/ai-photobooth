@@ -14,6 +14,7 @@ import {
   configurationSlice,
   getConfigurationFromLocalStorage
 } from "@/slices/config";
+import {AppEvents, eventsSlice} from "@/slices/events";
 
 const getImagesFromIndexedDB = async (key_prefix: string): Promise<Image[]> => {
   let db;
@@ -42,6 +43,9 @@ export async function initializeStore() {
     images: { list: await getImagesFromIndexedDB(IMAGE_KEY_PREFIX) },
     backgrounds: { list: await getImagesFromIndexedDB(BACKGROUND_KEY_PREFIX) },
     configuration: getConfigurationFromLocalStorage(),
+    events: {
+      scrollGalleryToTop: false,
+    }
   };
 
   const store = configureStore({
@@ -49,6 +53,7 @@ export async function initializeStore() {
       images: imagesSlice.reducer,
       backgrounds: backgroundsSlice.reducer,
       configuration: configurationSlice.reducer,
+      events: eventsSlice.reducer,
     },
     preloadedState,
   });
@@ -56,7 +61,7 @@ export async function initializeStore() {
   return store;
 }
 
-export type RootState = { configuration: AppConfig, images: any, backgrounds: any};
+export type RootState = { configuration: AppConfig, images: any, backgrounds: any, events: AppEvents};
 export type AppDispatch = Dispatch<AnyAction>;
 
 export const useAppDispatch = () => useDispatch<AppDispatch>();

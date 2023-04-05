@@ -20,8 +20,10 @@ export const configurationSlice: Slice = createSlice({
   },
   reducers: {
     updateConfig: (state, action: PayloadAction<UpdateConfigAction>) => {
-      state[action.payload.key] = state[action.payload.value];
+      const newState = {...state};
+      newState[action.payload.key] = action.payload.value;
       localStorage.setItem(`${CONFIGURATION_KEY_PREFIX}_${action.payload.key}`, JSON.stringify(action.payload.value));
+      return newState;
     },
   },
 })

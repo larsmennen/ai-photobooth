@@ -1,21 +1,33 @@
-import React, { useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import { PayloadAction} from "@reduxjs/toolkit";
 import {RootState, useAppDispatch, useAppSelector} from "@/store";
 import dynamic from "next/dynamic";
 import FullscreenImageOverlay
   from "../FullscreenImageOverlay/FullscreenImageOverlay";
 import {Modal} from "@/components/Modal";
+import {updateEvent} from "@/slices/events";
+import {useSelector} from "react-redux";
 
 export type GalleryProps = {
   stateKey: string,
   removeImage: (id: any) => PayloadAction<any>
+  containerRef: React.RefObject<HTMLDivElement>
 }
 
 const Gallery = (props: GalleryProps) => {
   const images = useAppSelector((state: RootState) => (state as any)[props.stateKey].list);
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [idForDeletion, setIdForDeletion] = useState<string | undefined>(undefined)
+  
   const dispatch = useAppDispatch();
+  const atTop = useSelector((state: RootState) => state.events.scrollGalleryToTop);
+
+  useEffect(() => {
+    if (atTop && props.containerRef.current) {
+      props.containerRef.current.scrollTo({top: 0, behavior: 'smooth'});
+      dispatch(updateEvent({key: 'scrollGalleryToTop', value: false}));
+    }
+  }, [atTop]);
 
   const onClickDeleteModal = (id: string) => {
     setIdForDeletion(id);
@@ -32,6 +44,25 @@ const Gallery = (props: GalleryProps) => {
     setShowDeleteModal(false)
   }
 
+  useEffect(() => {
+    if (props.containerRef.current) {
+      const handleScroll = () => {
+        if (props.containerRef.current) {
+          const scrollTop = props.containerRef.current.scrollTop;
+          if (scrollTop === 0) {
+            dispatch(updateEvent({key: 'scrollGalleryToTop', value: true}));
+          } else {
+            dispatch(updateEvent({key: 'scrollGalleryToTop', value: false}));
+          }
+        }
+      };
+      props.containerRef.current.addEventListener("scroll", handleScroll);
+      return () => {
+        props.containerRef.current?.removeEventListener("scroll", handleScroll);
+      };
+    }
+  }, [props.containerRef.current]);
+
   if (images.length) {
     // Put newest first
     const imagesToShow = [...images].reverse();
@@ -39,8 +70,8 @@ const Gallery = (props: GalleryProps) => {
       <div className="grid grid-cols-2 gap-4 p-6">
         {imagesToShow.map((image) => (
           <div key={image.id}
-               className="card card-compact w-96 bg-base-100 shadow-xl">
-            <figure>
+               className="card card-compact w-full bg-base-100 shadow-xl flex items-center">
+            <figure className={"mx-auto"}>
               <FullscreenImageOverlay
                 key={`img-${image.id}`}
                 src={image.data}
@@ -49,7 +80,7 @@ const Gallery = (props: GalleryProps) => {
                 height={1024}
               />
             </figure>
-            <div className="card-body">
+            <div className="card-body w-full">
               <p>{image.prompt}</p>
               <div className="card-actions justify-end">
                 <button className="btn btn-error btn-square btn-xs"

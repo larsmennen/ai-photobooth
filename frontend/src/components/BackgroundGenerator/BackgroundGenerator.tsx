@@ -10,6 +10,7 @@ import {
   InputWithRef,
   RefWithMethods
 } from "@/components/PresetButtons/PresetButtons";
+import {updateEvent} from "@/slices/events";
 
 const IMAGE_SIZE = 1024;
 const FINAL_IMAGE_WIDTH = 1820; // For 16:9 ratio
@@ -30,8 +31,8 @@ Keywords:
 `
 
 const PRECONFIGURED_OPTIONS = {
-  'what': ["Kangaroo", "Tulip field", "Dutch windmill", "Milky Way", "German Shepherd", "Golden Gate Bridge", "Koala", "Roses", "Jasmyn flowers", "Hindu temple" ],
-  'where': ['Australian outback','Amsterdam houses', "Sydney Opera House", "Flinders Street Station", "Cambridge", "Indian wedding", "Northern Lights"],
+  'what': ["Kangaroo", "Tulip field", "Dutch windmill", "Milky Way", "German Shepherd", "Golden Gate Bridge", "Koala", "Roses", "Jasmine flowers", "Hindu temple", "Wattle flowers", "Marigold flowers" ],
+  'where': ['Australian outback','Amsterdam houses', "Sydney Opera House", "Melbourne's Flinders Street Station", "Cambridge University", "Indian wedding"],
   'style': ['Oil painting', "Impressionist", "Photorealistic", "Van Gogh", "Pastel", "Photobooth background" ]
 }
 
@@ -39,7 +40,7 @@ const PRECONFIGURED_OPTIONS = {
 // These mappings are applied to the prompt before sending it to GPT-3.5.
 const DETAILED_OPTIONS = {
   "Photorealistic": "Photorealistic 4k image shot on Canon EOS 1000D",
-  "Cambridge": "Cambridge (UK)"
+  "Cambridge University": "Cambridge University"
 }
 
 type FormState = { type: "guide-me" | "free-form"; where: string; what: string; style: string; prompt: string; };
@@ -134,6 +135,7 @@ const BackgroundGenerator: React.FC = () => {
       data: dataURL,
       prompt: formState.prompt
     }));
+    dispatch(updateEvent({key: 'scrollGalleryToTop', value: true}))
     clearForm();
   }
 

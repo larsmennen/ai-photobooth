@@ -2,13 +2,15 @@ import Head from 'next/head'
 import {GalleryNoSSR} from "@/components/Gallery";
 import {removeBackground} from "@/slices/images";
 import {BackgroundGenerator} from "@/components/BackgroundGenerator";
-import React, {useState} from "react";
+import React, {useRef, useState} from "react";
 import {ConfigurationModal} from "@/components/ConfigurationModal";
 import {AiFillGithub} from "react-icons/ai";
+import {UploadImageModal} from "@/components/UploadImageModal";
 
 export default function Photobooth() {
 
-  const [showModal, setShowModal] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const gridContainerRef = useRef<HTMLDivElement>(null);
 
   return (
     <>
@@ -20,8 +22,12 @@ export default function Photobooth() {
       </Head>
       <main className="flex h-screen w-screen flex-col">
         <ConfigurationModal />
+        <UploadImageModal key={`uploadImageModal-${showUploadModal}`} isOpen={showUploadModal} onDone={() => setShowUploadModal(false)} />
         <div className="relative">
           <div className="flex flex-row justify-center items-center">
+            <div className="absolute top-1 left-1">
+              <button className="flex btn btn-accent btn-sm" onClick={() => setShowUploadModal(true)}>Upload Image</button>
+            </div>
             <article className="prose">
               <h1>AI Photobooth</h1>
             </article>
@@ -32,9 +38,9 @@ export default function Photobooth() {
             </div>
           </div>
         </div>
-        <div className="flex flex-row h-screen">
-          <div className="flex-1 basis-1/2 overflow-y-auto bg-gray-100">
-            <GalleryNoSSR stateKey={'backgrounds'} removeImage={removeBackground} />
+        <div className="flex flex-grow flex-row h-0">
+          <div className="flex-1 basis-1/2 overflow-y-auto bg-gray-100" ref={gridContainerRef}>
+            <GalleryNoSSR stateKey={'backgrounds'} removeImage={removeBackground} containerRef={gridContainerRef} />
           </div>
           <div className="flex-1 basis-1/2 bg-gray-100">
             <BackgroundGenerator />
