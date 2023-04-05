@@ -15,7 +15,7 @@ const IMAGE_SIZE = 1024;
 const FINAL_IMAGE_WIDTH = 1820; // For 16:9 ratio
 const SYSTEM_PROMPT_ENHANCE_IMAGE_PROMPT = `You are a helpful assistant that is particularly good at describing images vividly and concisely.
 You only output 1 description each time, and NOTHING else. For example, you do NOT say "here is a description".
-You always make sure to include the mentioned style in your response in the first line.
+You always make sure to include the mentioned style in your response in the first line. If a camera model is mentioned in the keywords, you include it in your response.
 `
 const USER_PROMPT_ENHANCE_IMAGE_PROMPT = `
 Imagine you're trying to explain an image to someone who can't see it.
@@ -30,9 +30,16 @@ Keywords:
 `
 
 const PRECONFIGURED_OPTIONS = {
-  'what': ["Kangaroo", "Tulip field", "Dutch windmill", "Milky Way", "Rainbow", "German Shepherd in a superman suit" ],
-  'where': ['Australian outback','Amsterdam houses', "Sydney Opera House", "Flinders Street Station" ],
-  'style': ['Oil painting', "Impressionist", "Photorealistic 4k", "Van Gogh", "Vermeer" ]
+  'what': ["Kangaroo", "Tulip field", "Dutch windmill", "Milky Way", "German Shepherd", "Golden Gate Bridge", "Koala", "Roses", "Jasmyn flowers", "Hindu temple" ],
+  'where': ['Australian outback','Amsterdam houses', "Sydney Opera House", "Flinders Street Station", "Cambridge", "Indian wedding", "Northern Lights"],
+  'style': ['Oil painting', "Impressionist", "Photorealistic", "Van Gogh", "Pastel", "Photobooth background" ]
+}
+
+// In case you want to have something more detailed than what's on the button go into the prompt
+// These mappings are applied to the prompt before sending it to GPT-3.5.
+const DETAILED_OPTIONS = {
+  "Photorealistic": "Photorealistic 4k image shot on Canon EOS 1000D",
+  "Cambridge": "Cambridge (UK)"
 }
 
 type FormState = { type: "guide-me" | "free-form"; where: string; what: string; style: string; prompt: string; };
@@ -134,6 +141,11 @@ const BackgroundGenerator: React.FC = () => {
    * Use GPT3.5 to enhance the prompt
    */
   const enhancePrompt = async (prompt: string): Promise<string> => {
+
+    for (const [key, value] of Object.entries(DETAILED_OPTIONS)) {
+      prompt = prompt.replaceAll(key, value);
+    }
+
     const res = await openai.createChatCompletion({
       model: 'gpt-3.5-turbo',
       messages: [
@@ -353,8 +365,8 @@ const BackgroundGenerator: React.FC = () => {
               value={formState.where}
               disabled={isLoading}
               ref={whereInput}
-              onChange={(val: string) =>
-                handleFormChange("where", val)
+              onChange={(val: string | React.ChangeEvent<HTMLInputElement>) =>
+                handleFormChange("where", typeof val === 'string' ? val : val.target.value)
               }
             />
           </div>
@@ -370,8 +382,8 @@ const BackgroundGenerator: React.FC = () => {
               value={formState.what}
               disabled={isLoading}
               ref={whatInput}
-              onChange={(val: string) =>
-                handleFormChange("what", val)
+              onChange={(val: string | React.ChangeEvent<HTMLInputElement>) =>
+                handleFormChange("what", typeof val === 'string' ? val : val.target.value)
               }
             />
           </div>
@@ -387,8 +399,8 @@ const BackgroundGenerator: React.FC = () => {
               value={formState.style}
               disabled={isLoading}
               ref={styleInput}
-              onChange={(val: string) =>
-                handleFormChange("style", val)
+              onChange={(val: string | React.ChangeEvent<HTMLInputElement>) =>
+                handleFormChange("style", typeof val === 'string' ? val : val.target.value)
               }
             />
           </div>

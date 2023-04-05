@@ -1,4 +1,4 @@
-import { useState } from "react";
+import {useEffect, useRef, useState} from "react";
 import Image from "next/image";
 
 export type FullscreenImageOverlayProps = {
@@ -10,10 +10,33 @@ export type FullscreenImageOverlayProps = {
 
 const FullscreenImageOverlay: React.FC<FullscreenImageOverlayProps> = ({ src, width, height, alt }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const clickTimeout = useRef<number | null>(null); // Declare a click timeout ref
 
   const handleClick = () => {
-    setIsFullscreen(!isFullscreen);
+    if (clickTimeout.current) {
+      // If there is a click timeout, then the user is double clicking
+      clearTimeout(clickTimeout.current);
+      clickTimeout.current = null;
+      setIsFullscreen(!isFullscreen);
+    } else {
+      // Otherwise, the user is single clicking
+      clickTimeout.current = setTimeout(() => {
+        clickTimeout.current = null;
+        setIsFullscreen(!isFullscreen);
+      }, 300) as unknown as number; // Set the timeout to 300ms
+    }
   };
+
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      setIsFullscreen(false);
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => {
+      window.removeEventListener("keydown", handleKeyPress);
+    };
+  }, []);
 
   return (
     <>
