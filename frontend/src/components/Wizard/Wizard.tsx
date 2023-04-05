@@ -11,7 +11,7 @@ const Wizard = () => {
 
   const renderStep1 = () => (
     <>
-      <GalleryNoSSR stateKey={'backgrounds'} removeImage={removeBackground} />
+      <GalleryNoSSR stateKey={'backgrounds'} removeImage={removeBackground} containerRef={undefined} />
       <div className="divider divider-horizontal">OR</div>
       <BackgroundGenerator />
     </>

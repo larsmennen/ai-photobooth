@@ -1,6 +1,5 @@
 import {useState} from 'react'
-import {useAppDispatch, useAppSelector} from "@/store";
-import {updateConfig} from "@/slices/config";
+import {useAppDispatch} from "@/store";
 import {addBackground} from "@/slices/images";
 import {nanoid} from "@reduxjs/toolkit";
 

@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import { PayloadAction} from "@reduxjs/toolkit";
 import {RootState, useAppDispatch, useAppSelector} from "@/store";
 import dynamic from "next/dynamic";
@@ -11,7 +11,7 @@ import {useSelector} from "react-redux";
 export type GalleryProps = {
   stateKey: string,
   removeImage: (id: any) => PayloadAction<any>
-  containerRef: React.RefObject<HTMLDivElement>
+  containerRef: React.RefObject<HTMLDivElement> | undefined
 }
 
 const Gallery = (props: GalleryProps) => {
@@ -23,11 +23,11 @@ const Gallery = (props: GalleryProps) => {
   const atTop = useSelector((state: RootState) => state.events.scrollGalleryToTop);
 
   useEffect(() => {
-    if (atTop && props.containerRef.current) {
+    if (atTop && props.containerRef && props.containerRef.current) {
       props.containerRef.current.scrollTo({top: 0, behavior: 'smooth'});
       dispatch(updateEvent({key: 'scrollGalleryToTop', value: false}));
     }
-  }, [atTop]);
+  }, [atTop, dispatch, props.containerRef]);
 
   const onClickDeleteModal = (id: string) => {
     setIdForDeletion(id);
@@ -45,9 +45,9 @@ const Gallery = (props: GalleryProps) => {
   }
 
   useEffect(() => {
-    if (props.containerRef.current) {
+    if (props.containerRef && props.containerRef.current) {
       const handleScroll = () => {
-        if (props.containerRef.current) {
+        if (props.containerRef && props.containerRef.current) {
           const scrollTop = props.containerRef.current.scrollTop;
           if (scrollTop === 0) {
             dispatch(updateEvent({key: 'scrollGalleryToTop', value: true}));
@@ -58,10 +58,10 @@ const Gallery = (props: GalleryProps) => {
       };
       props.containerRef.current.addEventListener("scroll", handleScroll);
       return () => {
-        props.containerRef.current?.removeEventListener("scroll", handleScroll);
+        props.containerRef?.current?.removeEventListener("scroll", handleScroll);
       };
     }
-  }, [props.containerRef.current]);
+  }, [dispatch, props.containerRef]);
 
   if (images.length) {
     // Put newest first
