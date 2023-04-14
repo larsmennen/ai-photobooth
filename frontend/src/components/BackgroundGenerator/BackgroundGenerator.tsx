@@ -76,7 +76,10 @@ const BackgroundGenerator: React.FC = () => {
   const openaiApiKey = useAppSelector(state => state.configuration.openaiApiKey);
   const openaiConfiguration = new Configuration({
     apiKey: openaiApiKey,
-    formDataCtor: CustomFormData // Hacky fix for https://github.com/openai/openai-node/issues/75
+    formDataCtor: CustomFormData, // Hacky fix for https://github.com/openai/openai-node/issues/75
+    baseOptions: {
+      timeout: 60000,
+    }
   });
   const openai = new OpenAIApi(openaiConfiguration);
 
@@ -159,12 +162,17 @@ const BackgroundGenerator: React.FC = () => {
         {role: 'system', content: SYSTEM_PROMPT_ENHANCE_IMAGE_PROMPT},
         {role: 'user', content: `${USER_PROMPT_ENHANCE_IMAGE_PROMPT}${prompt}`},
       ]
+    }).catch((err: any) => {
+      if (err && err.response === undefined) {
+        alert('Seems request to OpenAI timed out, check network connection or try again.');
+        console.error(err);
+      } else if (err && err.response.status !== 200) {
+        alert('Unsuccessful request to OpenAI, refresh page?');
+        console.error(res);
+      }
+      return err.response;
     });
-    if (res.status !== 200) {
-      alert('Unsuccessful request to OpenAI, refresh page?');
-      console.error(res);
-      return '';
-    }
+    if (res === undefined) return '';
     if (!res.data.choices[0].message) {
       alert('Unsuccessful response, check return');
       console.error(res);
@@ -255,17 +263,30 @@ const BackgroundGenerator: React.FC = () => {
         'b64_json'
       );
       // Send in parallel
-      await Promise.all([resLeft, resRight]).then((values) => {
+      await Promise.all([resLeft, resRight]).catch((error: any) => {
+        console.error('Error when calling OpenAI image generation');
+        if (error && error.response === undefined) {
+          alert('Seems request to OpenAI timed out, check network connection or try again.');
+          console.error(error);
+          clearForm();
+          return;
+        } else if (error && error.response.status !== 200) {
+          alert('Unsuccessful request to OpenAI, refresh page?');
+          console.error(error);
+          clearForm();
+          return;
+        }
+      }).then((values) => {
+
+        if (!values) return;
 
         const [resLeft, resRight] = values;
 
-        if (resLeft.status !== 200) {
+        if (resLeft.status !== 200 || resRight.status !== 200) {
           alert('Unsuccessful request to OpenAI, refresh page?');
-          console.error(resLeft);
-        }
-        if (resRight.status !== 200) {
-          alert('Unsuccessful request to OpenAI, refresh page?');
-          console.error(resRight);
+          console.error(resLeft, resRight);
+          clearForm();
+          return;
         }
 
         // Merge the two images together
@@ -290,6 +311,10 @@ const BackgroundGenerator: React.FC = () => {
 
     // Enhance the prompt
     const enhancedPrompt = await enhancePrompt(formState.prompt);
+    if (enhancedPrompt === '') {
+      clearForm();
+      return;
+    }
 
     // Generate the image
     let imageGenRes;
@@ -302,6 +327,12 @@ const BackgroundGenerator: React.FC = () => {
       });
     } catch (error: any) {
       console.error('Error when calling OpenAI image generation');
+      if (error && error.response === undefined) {
+        alert('Seems request to OpenAI timed out, check network connection or try again.');
+        console.error(error);
+        clearForm();
+        return;
+      }
       let message: string;
       if (error.response) {
         console.error(error.response.status);
