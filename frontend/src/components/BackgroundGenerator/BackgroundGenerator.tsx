@@ -33,14 +33,15 @@ Keywords:
 const PRECONFIGURED_OPTIONS = {
   'what': ["Kangaroo", "Tulip field", "Dutch windmill", "Milky Way", "German Shepherd", "Golden Gate Bridge", "Koala", "Roses", "Jasmine flowers", "Hindu temple", "Wattle flowers", "Marigold flowers" ],
   'where': ['Australian outback','Amsterdam houses', "Sydney Opera House", "Melbourne's Flinders Street Station", "Cambridge University", "Indian wedding"],
-  'style': ['Oil painting', "Impressionist", "Photorealistic", "Van Gogh", "Pastel", "Photobooth background" ]
+  'style': ['Oil painting', "Impressionist", "Photorealistic", "Van Gogh", "Pastel", "Photobooth background", "Macro shot" ]
 }
 
 // In case you want to have something more detailed than what's on the button go into the prompt
 // These mappings are applied to the prompt before sending it to GPT-3.5.
 const DETAILED_OPTIONS = {
   "Photorealistic": "Photorealistic 4k image shot on Canon EOS 1000D",
-  "Cambridge University": "Cambridge University"
+  "Cambridge University": "Cambridge University",
+  "Macro shot": "Macro 4k picture taken on an iPhone 13 Pro in macro mode"
 }
 
 type FormState = { type: "guide-me" | "free-form"; where: string; what: string; style: string; prompt: string; };
