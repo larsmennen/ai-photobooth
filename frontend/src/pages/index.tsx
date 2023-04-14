@@ -39,11 +39,11 @@ export default function Photobooth() {
           </div>
         </div>
         <div className="flex flex-grow flex-row h-0">
-          <div className="flex-1 basis-1/2 overflow-y-auto bg-gray-100" ref={gridContainerRef}>
-            <GalleryNoSSR stateKey={'backgrounds'} removeImage={removeBackground} containerRef={gridContainerRef} />
-          </div>
           <div className="flex-1 basis-1/2 bg-gray-100">
             <BackgroundGenerator />
+          </div>
+          <div className="flex-1 basis-1/2 overflow-y-auto bg-gray-100" ref={gridContainerRef}>
+            <GalleryNoSSR stateKey={'backgrounds'} removeImage={removeBackground} containerRef={gridContainerRef} />
           </div>
         </div>
       </main>
