@@ -45,6 +45,7 @@ const DETAILED_OPTIONS = {
   "Dutch masters": "Dutch masters style painting",
   "Cartoon": "Cartoon-style image with sharp pen lines and vibrant colors",
   "Hollywood blockbuster": "Movie poster of a Hollywood blockbuster with no text",
+  "Van Gogh": "In the painting style of Vincent Van Gogh's Sunflowers",
 }
 
 type FormState = { type: "guide-me" | "free-form"; where: string; what: string; style: string; prompt: string; };
