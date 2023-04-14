@@ -31,9 +31,9 @@ Keywords:
 `
 
 const PRECONFIGURED_OPTIONS = {
-  'what': ["Kangaroo", "Tulip field", "Dutch windmill", "Milky Way", "German Shepherd", "Golden Gate Bridge", "Koala", "Roses", "Jasmine flowers", "Hindu temple", "Wattle flowers", "Marigold flowers" ],
-  'where': ['Australian outback','Amsterdam houses', "Sydney Opera House", "Melbourne's Flinders Street Station", "Cambridge University", "Indian wedding"],
-  'style': ['Oil painting', "Impressionist", "Photorealistic", "Van Gogh", "Pastel", "Photobooth background", "Macro shot" ]
+  'what': ["Tulip field", "Kangaroo", "Koala",  "Dutch windmill", "Milky Way", "German Shepherd",  "Roses", "Jasmine flowers", "Wattle flowers", "Marigold flowers" ],
+  'where': ['Australian outback','Amsterdam houses', "Sydney Opera House", "Melbourne's Flinders Street Station", "Cambridge University", "Hindu temple", "Golden Gate Bridge"],
+  'style': ['Oil painting', "Impressionist", "Photorealistic", "Van Gogh", "Photobooth background", "Macro shot", "Futuristic cyberpunk", "Dutch masters", "Vector style", "Cartoon", "Hollywood blockbuster" ]
 }
 
 // In case you want to have something more detailed than what's on the button go into the prompt
@@ -41,7 +41,10 @@ const PRECONFIGURED_OPTIONS = {
 const DETAILED_OPTIONS = {
   "Photorealistic": "Photorealistic 4k image shot on Canon EOS 1000D",
   "Cambridge University": "Cambridge University",
-  "Macro shot": "Macro 4k picture taken on an iPhone 13 Pro in macro mode"
+  "Macro shot": "Macro 4k picture taken on an iPhone 13 Pro in macro mode",
+  "Dutch masters": "Dutch masters style painting",
+  "Cartoon": "Cartoon-style image with sharp pen lines and vibrant colors",
+  "Hollywood blockbuster": "Movie poster of a Hollywood blockbuster with no text",
 }
 
 type FormState = { type: "guide-me" | "free-form"; where: string; what: string; style: string; prompt: string; };
