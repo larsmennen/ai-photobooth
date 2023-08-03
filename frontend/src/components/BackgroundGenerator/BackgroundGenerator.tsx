@@ -1,4 +1,4 @@
-import React, { useState} from "react";
+import React, {useState} from "react";
 import {Configuration, OpenAIApi} from "openai";
 import {useAppDispatch, useAppSelector} from "@/store";
 import {addBackground} from "@/slices/images";
@@ -6,12 +6,13 @@ import {nanoid} from "@reduxjs/toolkit";
 import nextBase64 from "next-base64";
 import {EnhancedPromptModal} from "@/components/EnhancedPromptModal";
 import {PresetButtons} from "@/components/PresetButtons";
-import {
-  InputWithRef,
-  RefWithMethods
-} from "@/components/PresetButtons/PresetButtons";
+import {InputWithRef, RefWithMethods} from "@/components/PresetButtons/PresetButtons";
 import {updateEvent} from "@/slices/events";
+import {ImageGeneratorApis} from "@/slices/config";
+import {ImagePickerModal} from "@/components/ImagePickerModal";
 
+
+const ASPECT_RATIO = '16:9';
 const IMAGE_SIZE = 1024;
 const FINAL_IMAGE_WIDTH = 1820; // For 16:9 ratio
 const SYSTEM_PROMPT_ENHANCE_IMAGE_PROMPT = `You are a helpful assistant that is particularly good at describing images vividly and concisely.
@@ -42,13 +43,30 @@ const DETAILED_OPTIONS = {
   "Photorealistic": "Photorealistic 4k image shot on Canon EOS 1000D",
   "Cambridge University": "Cambridge University",
   "Macro shot": "Macro 4k picture taken on an iPhone 13 Pro in macro mode",
-  "Dutch masters": "Dutch masters style painting",
+  "Dutch masters": "Dutch masters style oil painting",
   "Cartoon": "Cartoon-style image with sharp pen lines and vibrant colors",
   "Hollywood blockbuster": "Movie poster of a Hollywood blockbuster with no text",
-  "Van Gogh": "In the painting style of Vincent Van Gogh's Sunflowers",
+  "Van Gogh": "In the painting style of Vincent Van Gogh's Sunflowers - oilpainting",
+  "Impressionist": "Impressionist style oil painting",
 }
 
 type FormState = { type: "guide-me" | "free-form"; where: string; what: string; style: string; prompt: string; };
+
+type ImagineApiImageResponse = {
+  data: {
+    id: string; // UUID is just a unique string
+    prompt: string;
+    results: null | string;
+    user_created: string;
+    date_created: string;
+    status: "pending" | "in-progress" | "completed" | "failed";
+    progress: number | null;
+    url: null | string;
+    error: null | string;
+    upscaled_urls: null | string[];
+    upscaled: string[];
+  }
+}
 
 class CustomFormData extends FormData {
   getHeaders() {
@@ -60,6 +78,8 @@ const BackgroundGenerator: React.FC = () => {
   const dispatch = useAppDispatch();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showEnhancedPromptModal, setShowEnhancedPromptModal] = useState<boolean>(false);
+  const [generatedMidjourneyImages, setGeneratedMidjourneyImages] = useState<string[]>([]);
+  const [showImagePickerModal, setShowImagePickerModal] = useState<boolean>(false);
   const [enhancedPrompt, setEnhancedPrompt] = useState<string>('');
   const [revision, setRevision] = useState<number>(0);
   const [formState, setFormState] = useState<FormState>({
@@ -73,9 +93,10 @@ const BackgroundGenerator: React.FC = () => {
   const whatInput = React.createRef<HTMLInputElement>();
   const styleInput = React.createRef<HTMLInputElement>();
 
-  const openaiApiKey = useAppSelector(state => state.configuration.openaiApiKey);
+  const imageGenApi = useAppSelector(state => state.configuration.imageGeneratorApi);
+  const imageGenApiKey = useAppSelector(state => state.configuration.imageGeneratorApiKey);
   const openaiConfiguration = new Configuration({
-    apiKey: openaiApiKey,
+    apiKey: imageGenApiKey,
     formDataCtor: CustomFormData, // Hacky fix for https://github.com/openai/openai-node/issues/75
     baseOptions: {
       timeout: 60000,
@@ -147,14 +168,19 @@ const BackgroundGenerator: React.FC = () => {
     clearForm();
   }
 
+  const makePromptMoreDetailed = (prompt: string): string => {
+    for (const [key, value] of Object.entries(DETAILED_OPTIONS)) {
+      prompt = prompt.replaceAll(key, value);
+    }
+    return prompt;
+  }
+
   /*
    * Use GPT3.5 to enhance the prompt
    */
   const enhancePrompt = async (prompt: string): Promise<string> => {
 
-    for (const [key, value] of Object.entries(DETAILED_OPTIONS)) {
-      prompt = prompt.replaceAll(key, value);
-    }
+    prompt = makePromptMoreDetailed(prompt);
 
     const res = await openai.createChatCompletion({
       model: 'gpt-3.5-turbo',
@@ -306,17 +332,7 @@ const BackgroundGenerator: React.FC = () => {
     imageObj.src = "data:image/png;base64," + encodedImage;
   }
 
-  const handleFormSubmit = async () => {
-    setIsLoading(true);
-
-    // Enhance the prompt
-    const enhancedPrompt = await enhancePrompt(formState.prompt);
-    if (enhancedPrompt === '') {
-      clearForm();
-      return;
-    }
-
-    // Generate the image
+  async function generateOpenAiImage(enhancedPrompt: string) {
     let imageGenRes;
     try {
       imageGenRes = await openai.createImage({
@@ -360,6 +376,71 @@ const BackgroundGenerator: React.FC = () => {
 
     // Extend the image
     await extendImage(IMAGE_SIZE, FINAL_IMAGE_WIDTH, imageData, enhancedPrompt);
+  }
+
+  async function generateMidjourneyImage(enhancedPrompt: string) {
+
+    const body = {
+      prompt: `${enhancedPrompt} --ar ${ASPECT_RATIO} --v 5.2 --style raw`
+    };
+
+    try {
+      const response = await fetch("/api/midjourney", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body)
+      });
+      if (response.status === 500) {
+        console.error(response)
+        alert('Unsuccessful request; check your prompt does not contain any inappropriate words.');
+        setShowEnhancedPromptModal(false)
+        clearForm();
+      }
+      let images = await response.json();
+      if (!images) {
+        return;
+      }
+
+      setShowEnhancedPromptModal(false);
+      setGeneratedMidjourneyImages([images['topLeft'], images['topRight'], images['bottomLeft'], images['bottomRight']]);
+      setShowImagePickerModal(true);
+    } catch (error) {
+      console.error(`Fetch failed: ${error}`);
+      throw error;
+    }
+  }
+
+  const handleNewMidjourneyImage = async (image: string) => {
+    setShowImagePickerModal(false);
+    setGeneratedMidjourneyImages([]);
+    clearForm();
+    pushNewImage(image);
+  }
+
+  const handleFormSubmit = async () => {
+    setIsLoading(true);
+
+    // Generate the image
+    if (imageGenApi === ImageGeneratorApis.OpenAI) {
+      // Enhance the prompt
+      const enhancedPrompt = await enhancePrompt(formState.prompt);
+      if (enhancedPrompt === '') {
+        clearForm();
+        return;
+      }
+      await generateOpenAiImage(enhancedPrompt);
+    } else if (imageGenApi === ImageGeneratorApis.Midjourney) {
+      const prompt = makePromptMoreDetailed(formState.prompt);
+      setEnhancedPrompt(prompt);
+      setShowEnhancedPromptModal(true);
+      await generateMidjourneyImage(prompt);
+    } else {
+      alert('Unknown image generator API choice');
+      clearForm();
+      return;
+    }
 
   }
 
@@ -368,6 +449,7 @@ const BackgroundGenerator: React.FC = () => {
   return (
     <div className="p-10 w-full">
       <EnhancedPromptModal prompt={enhancedPrompt} showModal={showEnhancedPromptModal} />
+      <ImagePickerModal images={generatedMidjourneyImages} showModal={showImagePickerModal} onSelect={(dataURL) => handleNewMidjourneyImage(dataURL)} />
       <div className="flex justify-center">
         <h1 className="flex-1 text-2xl font-bold">{type === 'free-form' ? 'Write your own prompt' : 'Choose from the following'}</h1>
         <div className="form-control flex mt-auto">
